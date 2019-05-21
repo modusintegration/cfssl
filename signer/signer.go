@@ -21,6 +21,7 @@ import (
 	"github.com/cloudflare/cfssl/csr"
 	cferr "github.com/cloudflare/cfssl/errors"
 	"github.com/cloudflare/cfssl/info"
+	"github.com/cloudflare/cfssl/log"
 )
 
 // Subject contains the information that should be used to override the
@@ -83,15 +84,25 @@ func appendIf(s string, a *[]string) {
 func (s *Subject) Name() pkix.Name {
 	var name pkix.Name
 	name.CommonName = s.CN
+	log.Infof("signer.name(): creating PKIX name for the Subject s: %+v\n", s)
 
 	for _, n := range s.Names {
+		log.Infof("signer: current n: %+v\n", n)
 		appendIf(n.C, &name.Country)
 		appendIf(n.ST, &name.Province)
 		appendIf(n.L, &name.Locality)
 		appendIf(n.O, &name.Organization)
 		appendIf(n.OU, &name.OrganizationalUnit)
+		if n.EmailAddress != "" {
+			var typeAndValue pkix.AttributeTypeAndValue
+			typeAndValue.Value = n.EmailAddress
+			typeAndValue.Type = []int{1, 2, 840, 113549, 1, 9, 1}
+			log.Infof("signer: current typeAndValue: %+v\n", typeAndValue)
+			name.ExtraNames = append(name.ExtraNames, typeAndValue)
+		}
 	}
 	name.SerialNumber = s.SerialNumber
+	log.Infof("signer: current name: %+v\n", name)
 	return name
 }
 
@@ -172,6 +183,7 @@ func DefaultSigAlgo(priv crypto.Signer) x509.SignatureAlgorithm {
 // ParseCertificateRequest takes an incoming certificate request and
 // builds a certificate template from it.
 func ParseCertificateRequest(s Signer, csrBytes []byte) (template *x509.Certificate, err error) {
+	log.Info("signer: ParseCertificateRequest")
 	csrv, err := x509.ParseCertificateRequest(csrBytes)
 	if err != nil {
 		err = cferr.Wrap(cferr.CSRError, cferr.ParseFailed, err)
@@ -183,6 +195,20 @@ func ParseCertificateRequest(s Signer, csrBytes []byte) (template *x509.Certific
 		err = cferr.Wrap(cferr.CSRError, cferr.KeyMismatch, err)
 		return
 	}
+
+	log.Debugf("signer: ParseCertificateRequest csrv.Subject: %+v\n", csrv.Subject)
+	log.Debugf("signer: ParseCertificateRequest csrv.Subject.Names: %+v\n", csrv.Subject.Names)
+
+	// 2019/05/21 17:52:45 [INFO] signer: ParseCertificateRequest csrv.Subject.Names: [
+	// {Type:2.5.4.10 Value:Mowali}
+	// {Type:2.5.4.11 Value:PKI}
+	// {Type:2.5.4.3 Value:hub.test.mowali.com}
+	// {Type:1.2.840.113549.1.9.1 Value:pkiadmin@mowali.com}]
+
+	// From pkix.Name: When marshaling, elements
+	// in ExtraNames are appended and override other values with the same OID.
+	// So, lets turn Names into ExtraNames so the emailAddress ( if present ) appears in the Subject
+	csrv.Subject.ExtraNames = csrv.Subject.Names
 
 	template = &x509.Certificate{
 		Subject:            csrv.Subject,
