@@ -1,8 +1,22 @@
-# CFSSL
+# CFSSL - MODUSBOX
 
-[![Build Status](https://travis-ci.org/cloudflare/cfssl.svg?branch=master)](https://travis-ci.org/cloudflare/cfssl)
-[![Coverage Status](http://codecov.io/github/cloudflare/cfssl/coverage.svg?branch=master)](http://codecov.io/github/cloudflare/cfssl?branch=master)
-[![GoDoc](https://godoc.org/github.com/cloudflare/cfssl?status.svg)](https://godoc.org/github.com/cloudflare/cfssl)
+This is a [cloudflare cfssl](https://github.com/cloudflare/cfssl) fork, that adds support for emailAddress atribute as part of the Subject.
+
+This, according to [RFC 5280](https://tools.ietf.org/html/rfc5280#section-4.1.2.6) is deprecated, but since some organizations still require it we extend cfssl to support this.
+
+The spec also states that:
+>Conforming implementations generating new certificates with
+>electronic mail addresses MUST use the rfc822Name in the subject
+>alternative name extension (Section 4.2.1.6) to describe such
+>identities.  Simultaneous inclusion of the emailAddress attribute in
+>the subject distinguished name to support legacy implementations is
+>deprecated but permitted.
+
+To conform to the spec, if when creating a CSR or a Certificate the Subject includes the `emailAddress` attribute, this extension creates also an email Subject Alternative Name
+
+## README extensions
+
+The `emailAddress` Subject attribute is only supported with local signing.
 
 ## CloudFlare's PKI/TLS toolkit
 
@@ -27,19 +41,23 @@ CFSSL consists of:
   `cfssl` and `multirootca` programs and writes certificates, keys,
   CSRs, and bundles to disk.
 
+
 ### Building
 
 Building cfssl requires a
 [working Go 1.11+ installation](http://golang.org/doc/install) and a
 properly set `GOPATH`.
 
-```
-$ git clone git@github.com:cloudflare/cfssl.git $GOPATH/src/github.com/cloudflare/cfssl
+**WARNING** this commands overwrites the source cloudflare cfssl installation if present.
+
+```bash
+$ git clone git@github.com:modusintegration/cfssl.git $GOPATH/src/github.com/cloudflare/cfssl
 $ cd $GOPATH/src/github.com/cloudflare/cfssl
 $ make
 ```
 
 The resulting binaries will be in the bin folder:
+
 ```
 $ tree bin
 bin
@@ -59,6 +77,7 @@ bin
 
 You can set the `GOOS` and `GOARCH` environment variables to have Go cross compile for alternative platforms; however, cfssl requires cgo, and cgo requires a working compiler toolchain for the target platform.
 
+
 ### Installation
 
 Installation requires a
@@ -66,7 +85,7 @@ Installation requires a
 properly set `GOPATH`.
 
 ```
-$ go get -u github.com/cloudflare/cfssl/cmd/cfssl
+$ go get -u github.com/modusintegration/cfssl/cmd/cfssl
 ```
 
 will download and build the CFSSL tool, installing it in
@@ -76,7 +95,7 @@ To install any of the other utility programs that are
 in this repo (for instance `cfssljson` in this case):
 
 ```
-$ go get -u github.com/cloudflare/cfssl/cmd/cfssljson
+$ go get -u github.com/modusintegration/cfssl/cmd/cfssljson
 ```
 
 This will download and build the CFSSLJSON tool, installing it in
@@ -85,7 +104,7 @@ This will download and build the CFSSLJSON tool, installing it in
 And to simply install __all__ of the programs in this repo:
 
 ```
-$ go get -u github.com/cloudflare/cfssl/cmd/...
+$ go get -u github.com/modusintegration/cfssl/cmd/...
 ```
 
 This will download, build, and install all of the utility programs
@@ -139,6 +158,8 @@ The subject is an optional file that contains subject information that
 should be used in place of the information from the CSR. It should be
 a JSON file as follows:
 
+( note the added `emailAddress` attribute )
+
 ```json
 {
     "CN": "example.com",
@@ -148,7 +169,8 @@ a JSON file as follows:
             "L":  "San Francisco",
             "O":  "Internet Widgets, Inc.",
             "OU": "WWW",
-            "ST": "California"
+            "ST": "California",
+            "emailAddress": "info@widgets.io"
         }
     ]
 }
@@ -253,7 +275,8 @@ the key request as a JSON file. This file should follow the form:
             "L":  "San Francisco",
             "O":  "Internet Widgets, Inc.",
             "OU": "WWW",
-            "ST": "California"
+            "ST": "California",
+            "emailAddress": "info@widgets.io"
         }
     ]
 }
