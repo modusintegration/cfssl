@@ -200,32 +200,6 @@ cat <<EOF > /tmp/config.json
 EOF
 
 
-cat <<EOF > /tmp/csr_dup.json
-{
-  "CN":"hub.test.mowali.com",
-  "hosts":[
-    "hub1.test.mowali.com",
-    "hub2.test.mowali.com",
-    "163.10.5.24",
-    "163.10.5.22",
-    "beatrice.wagate@mowali.com"
-    ],
-  "key":{
-    "size":4096,
-    "algo":"rsa"
-  },
-  "names":[
-    {
-      "CN":"hub.test.mowali.com",
-      "emailAddress":"beatrice.wagate@mowali.com",
-      "O":"Mowali",
-      "OU":"PKI"
-    }
-  ]
-}
-EOF
-
-
 cat /tmp/mowali.csr \
 | bin/cfssl sign -loglevel $LOG_LEVEL -ca /tmp/example-ca.pem -ca-key /tmp/example-ca-key.pem -config=/tmp/config.json - \
 | jq -r '.cert' \
