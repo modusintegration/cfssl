@@ -12,7 +12,7 @@ The spec also states that:
 >the subject distinguished name to support legacy implementations is
 >deprecated but permitted.
 
-To conform to the spec, if when creating a CSR or a Certificate the Subject includes the emailAddress attribute, this extension creates also an email Subject Alternative Name
+To conform to the spec, if when creating a CSR or a Certificate the Subject includes the `emailAddress` attribute, this extension creates also an email Subject Alternative Name
 
 ## README extensions
 
