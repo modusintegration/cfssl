@@ -1,3 +1,5 @@
+LOG_LEVEL="${LOG_LEVEL:-1}"
+
 cat <<EOF > /tmp/mowali.csr
 Certificate Request:
     Data:

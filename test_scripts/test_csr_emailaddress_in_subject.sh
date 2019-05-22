@@ -1,3 +1,5 @@
+LOG_LEVEL="${LOG_LEVEL:-1}"
+
 cat <<EOF > /tmp/config.json
 {"signing":{"default":{"expiry":"43800h","usages":["signing","key encipherment","client auth"]}}}
 EOF
