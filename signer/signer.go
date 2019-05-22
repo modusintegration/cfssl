@@ -20,6 +20,7 @@ import (
 	"github.com/cloudflare/cfssl/config"
 	"github.com/cloudflare/cfssl/csr"
 	cferr "github.com/cloudflare/cfssl/errors"
+	"github.com/cloudflare/cfssl/helpers"
 	"github.com/cloudflare/cfssl/info"
 	"github.com/cloudflare/cfssl/log"
 )
@@ -205,8 +206,6 @@ func ParseCertificateRequest(s Signer, csrBytes []byte) (template *x509.Certific
 	csrv.Subject.ExtraNames = csrv.Subject.Names
 
 	// if there's an emailAddress Subject property, and it's not present as an EmailAddress SAN, add it
-	// https://oidref.com/1.2.840.113549.1.9.1
-	var emailAddressOID = []int{1, 2, 840, 113549, 1, 9, 1}
 	for _, atv := range csrv.Subject.ExtraNames {
 		value, ok := atv.Value.(string)
 		if !ok {
@@ -214,7 +213,7 @@ func ParseCertificateRequest(s Signer, csrBytes []byte) (template *x509.Certific
 		}
 
 		t := atv.Type
-		if SliceEqual(t, emailAddressOID) {
+		if helpers.SliceEqual(t, helpers.EmailAddressOID) {
 			log.Debugf("signer: adding an email address %+v\n", value)
 			csrv.EmailAddresses = append(csrv.EmailAddresses, value)
 		}
@@ -252,20 +251,6 @@ func ParseCertificateRequest(s Signer, csrBytes []byte) (template *x509.Certific
 	}
 
 	return
-}
-
-// SliceEqual tells whether a and b contain the same elements.
-// A nil argument is equivalent to an empty slice.
-func SliceEqual(a, b []int) bool {
-	if len(a) != len(b) {
-		return false
-	}
-	for i, v := range a {
-		if v != b[i] {
-			return false
-		}
-	}
-	return true
 }
 
 type subjectPublicKeyInfo struct {

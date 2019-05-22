@@ -167,13 +167,13 @@ func appendIf(s string, a *[]string) {
 }
 
 // Name returns the PKIX name for the request.
+// If any Name contains an EmailAddress, add it to the name.ExtraNames slice
 func (cr *CertificateRequest) Name() pkix.Name {
 	var name pkix.Name
 	name.CommonName = cr.CN
-	log.Infof("creating PKIX name for the request cr: %+v\n", cr)
+	log.Debugf("csr.Name: creating PKIX name for the request cr: %+v\n", cr)
 
 	for _, n := range cr.Names {
-		log.Infof("current n: %+v\n", n)
 		appendIf(n.C, &name.Country)
 		appendIf(n.ST, &name.Province)
 		appendIf(n.L, &name.Locality)
@@ -182,13 +182,13 @@ func (cr *CertificateRequest) Name() pkix.Name {
 		if n.EmailAddress != "" {
 			var typeAndValue pkix.AttributeTypeAndValue
 			typeAndValue.Value = n.EmailAddress
-			typeAndValue.Type = []int{1, 2, 840, 113549, 1, 9, 1}
-			log.Infof("current typeAndValue: %+v\n", typeAndValue)
+			typeAndValue.Type = helpers.EmailAddressOID
+			log.Debugf("csr.Name: found and EmailAddress, creating typeAndValue: %+v\n", typeAndValue)
 			name.ExtraNames = append(name.ExtraNames, typeAndValue)
 		}
 	}
 	name.SerialNumber = cr.SerialNumber
-	log.Infof("current name: %+v\n", name)
+	log.Debugf("csr.Name: current name: %+v\n", name)
 
 	return name
 }
@@ -401,6 +401,20 @@ func Generate(priv crypto.Signer, req *CertificateRequest) (csr []byte, err erro
 			tpl.URIs = append(tpl.URIs, uri)
 		} else {
 			tpl.DNSNames = append(tpl.DNSNames, req.Hosts[i])
+		}
+	}
+
+	// if there's an emailAddress Subject property, and it's not present as an EmailAddress SAN, add it
+	for _, atv := range tpl.Subject.ExtraNames {
+		value, ok := atv.Value.(string)
+		if !ok {
+			continue
+		}
+
+		t := atv.Type
+		if helpers.SliceEqual(t, helpers.EmailAddressOID) && !helpers.SliceContains(tpl.EmailAddresses, value) {
+			log.Debugf("csr.Generate: adding an email address %+v\n", value)
+			tpl.EmailAddresses = append(tpl.EmailAddresses, value)
 		}
 	}
 
