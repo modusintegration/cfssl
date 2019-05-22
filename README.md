@@ -56,6 +56,15 @@ $ cd $GOPATH/src/github.com/cloudflare/cfssl
 $ make
 ```
 
+or if using https to access GitHub:
+
+```bash
+$ git clone https://github.com/modusintegration/cfssl.git $GOPATH/src/github.com/cloudflare/cfssl
+$ cd $GOPATH/src/github.com/cloudflare/cfssl
+$ make
+```
+
+
 The resulting binaries will be in the bin folder:
 
 ```
