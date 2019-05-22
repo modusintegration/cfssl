@@ -36,6 +36,9 @@ type Name struct {
 	O            string // OrganisationName
 	OU           string // OrganisationalUnitName
 	SerialNumber string
+	// Unexported struct fields are invisible to the JSON package.
+	// Export a field by starting it with an uppercase letter.
+	EmailAddress string `json:"emailAddress" yaml:"emailAddress"`
 }
 
 // A KeyRequest is a generic request for a new key.
@@ -164,9 +167,11 @@ func appendIf(s string, a *[]string) {
 }
 
 // Name returns the PKIX name for the request.
+// If any Name contains an EmailAddress, add it to the name.ExtraNames slice
 func (cr *CertificateRequest) Name() pkix.Name {
 	var name pkix.Name
 	name.CommonName = cr.CN
+	log.Debugf("csr.Name: creating PKIX name for the request cr: %+v\n", cr)
 
 	for _, n := range cr.Names {
 		appendIf(n.C, &name.Country)
@@ -174,8 +179,17 @@ func (cr *CertificateRequest) Name() pkix.Name {
 		appendIf(n.L, &name.Locality)
 		appendIf(n.O, &name.Organization)
 		appendIf(n.OU, &name.OrganizationalUnit)
+		if n.EmailAddress != "" {
+			var typeAndValue pkix.AttributeTypeAndValue
+			typeAndValue.Value = n.EmailAddress
+			typeAndValue.Type = helpers.EmailAddressOID
+			log.Debugf("csr.Name: found and EmailAddress, creating typeAndValue: %+v\n", typeAndValue)
+			name.ExtraNames = append(name.ExtraNames, typeAndValue)
+		}
 	}
 	name.SerialNumber = cr.SerialNumber
+	log.Debugf("csr.Name: current name: %+v\n", name)
+
 	return name
 }
 
@@ -387,6 +401,20 @@ func Generate(priv crypto.Signer, req *CertificateRequest) (csr []byte, err erro
 			tpl.URIs = append(tpl.URIs, uri)
 		} else {
 			tpl.DNSNames = append(tpl.DNSNames, req.Hosts[i])
+		}
+	}
+
+	// if there's an emailAddress Subject property, and it's not present as an EmailAddress SAN, add it
+	for _, atv := range tpl.Subject.ExtraNames {
+		value, ok := atv.Value.(string)
+		if !ok {
+			continue
+		}
+
+		t := atv.Type
+		if helpers.SliceEqual(t, helpers.EmailAddressOID) && !helpers.SliceContains(tpl.EmailAddresses, value) {
+			log.Debugf("csr.Generate: adding an email address %+v\n", value)
+			tpl.EmailAddresses = append(tpl.EmailAddresses, value)
 		}
 	}
 

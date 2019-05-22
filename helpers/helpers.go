@@ -33,6 +33,33 @@ import (
 	"golang.org/x/crypto/pkcs12"
 )
 
+// SliceEqual tells whether a and b contain the same elements.
+// A nil argument is equivalent to an empty slice.
+func SliceEqual(a, b []int) bool {
+	if len(a) != len(b) {
+		return false
+	}
+	for i, v := range a {
+		if v != b[i] {
+			return false
+		}
+	}
+	return true
+}
+
+// EmailAddressOID is an asn1.ObjectIdentifier representing https://oidref.com/1.2.840.113549.1.9.1
+var EmailAddressOID = asn1.ObjectIdentifier{1, 2, 840, 113549, 1, 9, 1}
+
+// SliceContains tells whether slice contains value.
+func SliceContains(slice []string, value string) bool {
+	for _, n := range slice {
+		if value == n {
+			return true
+		}
+	}
+	return false
+}
+
 // OneYear is a time.Duration representing a year's worth of seconds.
 const OneYear = 8760 * time.Hour
 
