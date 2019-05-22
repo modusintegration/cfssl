@@ -1,4 +1,7 @@
 
+make clean
+make
+
 export LOG_LEVEL=1 #info
 
 TEST_FAILED=false
