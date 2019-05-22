@@ -213,7 +213,8 @@ func ParseCertificateRequest(s Signer, csrBytes []byte) (template *x509.Certific
 		}
 
 		t := atv.Type
-		if helpers.SliceEqual(t, helpers.EmailAddressOID) {
+		if helpers.SliceEqual(t, helpers.EmailAddressOID) && !helpers.SliceContains(csrv.EmailAddresses, value) {
+			{
 			log.Debugf("signer: adding an email address %+v\n", value)
 			csrv.EmailAddresses = append(csrv.EmailAddresses, value)
 		}
