@@ -3,5 +3,5 @@
 package version
 
 func init() {
-	version.Revision = "dev"
+	version.Revision = "dev-modus"
 }
