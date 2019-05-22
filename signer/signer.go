@@ -199,16 +199,26 @@ func ParseCertificateRequest(s Signer, csrBytes []byte) (template *x509.Certific
 	log.Debugf("signer: ParseCertificateRequest csrv.Subject: %+v\n", csrv.Subject)
 	log.Debugf("signer: ParseCertificateRequest csrv.Subject.Names: %+v\n", csrv.Subject.Names)
 
-	// 2019/05/21 17:52:45 [INFO] signer: ParseCertificateRequest csrv.Subject.Names: [
-	// {Type:2.5.4.10 Value:Mowali}
-	// {Type:2.5.4.11 Value:PKI}
-	// {Type:2.5.4.3 Value:hub.test.mowali.com}
-	// {Type:1.2.840.113549.1.9.1 Value:pkiadmin@mowali.com}]
-
 	// From pkix.Name: When marshaling, elements
 	// in ExtraNames are appended and override other values with the same OID.
 	// So, lets turn Names into ExtraNames so the emailAddress ( if present ) appears in the Subject
 	csrv.Subject.ExtraNames = csrv.Subject.Names
+
+	// if there's an emailAddress Subject property, and it's not present as an EmailAddress SAN, add it
+	// https://oidref.com/1.2.840.113549.1.9.1
+	var emailAddressOID = []int{1, 2, 840, 113549, 1, 9, 1}
+	for _, atv := range csrv.Subject.ExtraNames {
+		value, ok := atv.Value.(string)
+		if !ok {
+			continue
+		}
+
+		t := atv.Type
+		if SliceEqual(t, emailAddressOID) {
+			log.Debugf("signer: adding an email address %+v\n", value)
+			csrv.EmailAddresses = append(csrv.EmailAddresses, value)
+		}
+	}
 
 	template = &x509.Certificate{
 		Subject:            csrv.Subject,
@@ -242,6 +252,20 @@ func ParseCertificateRequest(s Signer, csrBytes []byte) (template *x509.Certific
 	}
 
 	return
+}
+
+// SliceEqual tells whether a and b contain the same elements.
+// A nil argument is equivalent to an empty slice.
+func SliceEqual(a, b []int) bool {
+	if len(a) != len(b) {
+		return false
+	}
+	for i, v := range a {
+		if v != b[i] {
+			return false
+		}
+	}
+	return true
 }
 
 type subjectPublicKeyInfo struct {
