@@ -8,6 +8,13 @@ import (
 	"github.com/cloudflare/cfssl/cli"
 )
 
+// build vars set from make
+var (
+	Describe string
+	Build    string
+	Commit   string
+)
+
 // Version stores the semantic versioning information for CFSSL.
 var version = struct {
 	Major    int
@@ -29,7 +36,7 @@ Usage of version:
 
 // FormatVersion returns the formatted version string.
 func FormatVersion() string {
-	return fmt.Sprintf("Version: %s\nRevision: %s\nRuntime: %s\n", versionString(), version.Revision, runtime.Version())
+	return fmt.Sprintf("Version: %s\nRevision: %s\nRuntime: %s\nCommit: %s\nDescribe: %s\nBuild: %s\n", versionString(), version.Revision, runtime.Version(), Commit, Describe, Build)
 }
 
 // The main functionality of 'cfssl version' is to print out the version info.
