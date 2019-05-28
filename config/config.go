@@ -89,6 +89,7 @@ type SigningProfile struct {
 	CTLogServers        []string     `json:"ct_log_servers"`
 	AllowedExtensions   []OID        `json:"allowed_extensions"`
 	CertStore           string       `json:"cert_store"`
+	SignatureAlgorithm  string       `json:"signature_algorithm"`
 
 	Policies                    []CertificatePolicy
 	Expiry                      time.Duration
@@ -459,6 +460,9 @@ func (p *SigningProfile) validProfile(isDefault bool) bool {
 				return false
 			}
 		}
+		if p.SignatureAlgorithm != "" {
+			log.Debugf("FIXME should validate the SignatureAlgorithm")
+		}
 	}
 
 	log.Debugf("profile is valid")
@@ -581,6 +585,13 @@ var ExtKeyUsage = map[string]x509.ExtKeyUsage{
 	"netscape sgc":     x509.ExtKeyUsageNetscapeServerGatedCrypto,
 }
 
+// SignatureAlgorithm contains a mapping from string names to x509.SignatureAlgorithm
+var SignatureAlgorithm = map[string]x509.SignatureAlgorithm{
+	"SHA256WithRSA": x509.SHA256WithRSA,
+	"SHA384WithRSA": x509.SHA384WithRSA,
+	"SHA512WithRSA": x509.SHA512WithRSA,
+}
+
 // An AuthKey contains an entry for a key used for authentication.
 type AuthKey struct {
 	// Type contains information needed to select the appropriate
@@ -599,9 +610,10 @@ type AuthKey struct {
 func DefaultConfig() *SigningProfile {
 	d := helpers.OneYear
 	return &SigningProfile{
-		Usage:        []string{"signing", "key encipherment", "server auth", "client auth"},
-		Expiry:       d,
-		ExpiryString: "8760h",
+		Usage:              []string{"signing", "key encipherment", "server auth", "client auth"},
+		Expiry:             d,
+		ExpiryString:       "8760h",
+		SignatureAlgorithm: "SHA256WithRSA",
 	}
 }
 

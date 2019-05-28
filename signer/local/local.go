@@ -26,7 +26,7 @@ import (
 	"github.com/cloudflare/cfssl/info"
 	"github.com/cloudflare/cfssl/log"
 	"github.com/cloudflare/cfssl/signer"
-	"github.com/google/certificate-transparency-go"
+	ct "github.com/google/certificate-transparency-go"
 	"github.com/google/certificate-transparency-go/client"
 	"github.com/google/certificate-transparency-go/jsonclient"
 	"golang.org/x/net/context"
@@ -90,11 +90,22 @@ func NewSignerFromFile(caFile, caKeyFile string, policy *config.Signing) (*Signe
 
 	priv, err := helpers.ParsePrivateKeyPEMWithPassword(cakey, password)
 	if err != nil {
-		log.Debug("Malformed private key %v", err)
+		log.Debugf("Malformed private key %v", err)
 		return nil, err
 	}
 
-	return NewSigner(priv, parsedCa, signer.DefaultSigAlgo(priv), policy)
+	s, err := NewSigner(priv, parsedCa, signer.DefaultSigAlgo(priv), policy)
+	if err != nil {
+		log.Debugf("Could not create NewSigner %v", err)
+		return nil, err
+	}
+	// ADDED picks the algo from a config parameter
+	if policy.Default.SignatureAlgorithm != "" {
+		log.Debugf("Choosing SignatureAlgorithm from policy.Default %v", policy.Default.SignatureAlgorithm)
+		s.sigAlgo = config.SignatureAlgorithm[policy.Default.SignatureAlgorithm]
+		log.Debugf("Chose SignatureAlgorithm: %v", s.sigAlgo)
+	}
+	return s, nil
 }
 
 func (s *Signer) sign(template *x509.Certificate) (cert []byte, err error) {
