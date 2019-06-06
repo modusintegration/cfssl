@@ -13,6 +13,7 @@ import (
 
 	"github.com/cloudflare/cfssl/certdb"
 	"github.com/cloudflare/cfssl/helpers"
+	"github.com/cloudflare/cfssl/log"
 )
 
 // Certificate represents a JSON description of an X.509 certificate.
@@ -50,7 +51,7 @@ type Name struct {
 	StreetAddress      string        `json:"street_address,omitempty"`
 	PostalCode         string        `json:"postal_code,omitempty"`
 	Names              []interface{} `json:"names,omitempty"`
-	//FIXME EmailAddress  string        `json:"email_address,omitempty"`
+	EmailAddress       string        `json:"email_address,omitempty"`
 	//ExtraNames         []interface{} `json:"extra_names,omitempty"`
 }
 
@@ -72,8 +73,19 @@ func ParseName(name pkix.Name) Name {
 		n.Names = append(n.Names, name.Names[i].Value)
 	}
 
-	// FIXME we could add the emailAddress that comes in name.Names( each | each.name = <emailoid>) as EmailAddress
-	// it currently appears on the names section on the Subject or Issuer
+	// if there's an emailAddress Subject property, and it's not present as an EmailAddress SAN, add it
+	for _, atv := range name.Names {
+		value, ok := atv.Value.(string)
+		if !ok {
+			continue
+		}
+
+		t := atv.Type
+		if helpers.SliceEqual(t, helpers.EmailAddressOID) {
+			log.Debugf("certinfo: setting an email address %+v\n", value)
+			n.EmailAddress = value
+		}
+	}
 
 	// ExtraNames aren't supported in Go 1.4
 	// for i := range name.ExtraNames {
