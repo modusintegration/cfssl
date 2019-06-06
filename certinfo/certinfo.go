@@ -27,6 +27,15 @@ type Certificate struct {
 	AKI                string    `json:"authority_key_id"`
 	SKI                string    `json:"subject_key_id"`
 	RawPEM             string    `json:"pem"`
+	SubjectSANs        CertificateSubjectSANs
+}
+
+// CertificateSubjectSANs contains the Subject SANs, by type
+type CertificateSubjectSANs struct {
+	DNSNames       []string `json:"DNSNames"`
+	EmailAddresses []string `json:"EmailAddresses"`
+	IPAddresses    []string `json:"IPAddresses"`
+	URIs           []string `json:"URIs"`
 }
 
 // Name represents a JSON description of a PKIX Name
@@ -41,6 +50,7 @@ type Name struct {
 	StreetAddress      string        `json:"street_address,omitempty"`
 	PostalCode         string        `json:"postal_code,omitempty"`
 	Names              []interface{} `json:"names,omitempty"`
+	//FIXME EmailAddress  string        `json:"email_address,omitempty"`
 	//ExtraNames         []interface{} `json:"extra_names,omitempty"`
 }
 
@@ -61,6 +71,9 @@ func ParseName(name pkix.Name) Name {
 	for i := range name.Names {
 		n.Names = append(n.Names, name.Names[i].Value)
 	}
+
+	// FIXME we could add the emailAddress that comes in name.Names( each | each.name = <emailoid>) as EmailAddress
+	// it currently appears on the names section on the Subject or Issuer
 
 	// ExtraNames aren't supported in Go 1.4
 	// for i := range name.ExtraNames {
@@ -100,6 +113,30 @@ func ParseCertificate(cert *x509.Certificate) *Certificate {
 	for _, ip := range cert.IPAddresses {
 		c.SANs = append(c.SANs, ip.String())
 	}
+
+	for _, emailAddress := range cert.EmailAddresses {
+		c.SANs = append(c.SANs, emailAddress)
+	}
+
+	for _, uri := range cert.URIs {
+		c.SANs = append(c.SANs, uri.String())
+	}
+
+	for _, value := range cert.DNSNames {
+		c.SubjectSANs.DNSNames = append(c.SubjectSANs.DNSNames, value)
+	}
+
+	for _, value := range cert.EmailAddresses {
+		c.SubjectSANs.EmailAddresses = append(c.SubjectSANs.EmailAddresses, value)
+	}
+
+	for _, value := range cert.IPAddresses {
+		c.SubjectSANs.IPAddresses = append(c.SubjectSANs.IPAddresses, value.String())
+	}
+
+	for _, value := range cert.URIs {
+		c.SubjectSANs.URIs = append(c.SubjectSANs.URIs, value.String())
+	}
 	return c
 }
 
@@ -115,7 +152,7 @@ func ParseCertificateFile(certFile string) (*Certificate, error) {
 
 // ParseCertificatePEM parses an x509 certificate PEM.
 func ParseCertificatePEM(certPEM []byte) (*Certificate, error) {
-	cert, err := helpers.ParseCertificatePEM(certPEM)
+	cert, err := helpers.ParseCertificatePEM(certPEM) // this is an x509.Certificate
 	if err != nil {
 		return nil, err
 	}
