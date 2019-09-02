@@ -212,6 +212,14 @@
   version = "v0.8.0"
 
 [[projects]]
+  digest = "1:1fc6b5f2b54d628665b01eeb24c046aa3534e43390766251a6bba2b5d93a6ea9"
+  name = "github.com/weppos/publicsuffix-go"
+  packages = ["publicsuffix"]
+  pruneopts = "UT"
+  revision = "08143ed89ef846df3e579a9630ca375f1714dd19"
+  version = "v0.5.0"
+
+[[projects]]
   digest = "1:19fd46009e9bad71f7e9a8367e7317ed632f89926352a7d59822edec785ae4f3"
   name = "github.com/ziutek/mymysql"
   packages = [
@@ -222,6 +230,32 @@
   pruneopts = "UT"
   revision = "e08c2f35356576b3c3690c252fe5dca728ae9292"
   version = "v1.5.4"
+
+[[projects]]
+  branch = "master"
+  digest = "1:1d53ab102f4ba6cb858c1e4b0d07aa9b4c8882fe3ab27642bd06779d38a50547"
+  name = "github.com/zmap/zcrypto"
+  packages = [
+    "json",
+    "util",
+    "x509",
+    "x509/ct",
+    "x509/pkix",
+  ]
+  pruneopts = "UT"
+  revision = "9051775e6a2e3a89ec27977077b09f4496febecf"
+
+[[projects]]
+  branch = "master"
+  digest = "1:ad138550c9c99f5d817938b031ada01189cb70de091ff7f3eff1ad0d5d8c731b"
+  name = "github.com/zmap/zlint"
+  packages = [
+    ".",
+    "lints",
+    "util",
+  ]
+  pruneopts = "UT"
+  revision = "fd021b4cfbeb919cc763d1cafd1e604658a6bbe7"
 
 [[projects]]
   branch = "master"
@@ -254,14 +288,40 @@
 
 [[projects]]
   branch = "master"
-  digest = "1:d6b719875cf8091fbab38527d81d34e71f4521b9ee9ccfbd4a32cff2ac5af96e"
+  digest = "1:ccdd1ad197b5b65f3b2320a4ed3f2d7b97fdfd41a59f1511fd4f28a3c2310556"
   name = "golang.org/x/net"
   packages = [
     "context",
     "context/ctxhttp",
+    "idna",
   ]
   pruneopts = "UT"
   revision = "f5dfe339be1d06f81b22525fe34671ee7d2c8904"
+
+[[projects]]
+  digest = "1:8d8faad6b12a3a4c819a3f9618cb6ee1fa1cfc33253abeeea8b55336721e3405"
+  name = "golang.org/x/text"
+  packages = [
+    "collate",
+    "collate/build",
+    "internal/colltab",
+    "internal/gen",
+    "internal/language",
+    "internal/language/compact",
+    "internal/tag",
+    "internal/triegen",
+    "internal/ucd",
+    "language",
+    "secure/bidirule",
+    "transform",
+    "unicode/bidi",
+    "unicode/cldr",
+    "unicode/norm",
+    "unicode/rangetable",
+  ]
+  pruneopts = "UT"
+  revision = "342b2e1fbaa52c93f31447ad2c6abc048c63e475"
+  version = "v0.3.2"
 
 [[projects]]
   branch = "master"
@@ -299,6 +359,9 @@
     "github.com/kisom/goutils/assert",
     "github.com/lib/pq",
     "github.com/mattn/go-sqlite3",
+    "github.com/zmap/zcrypto/x509",
+    "github.com/zmap/zlint",
+    "github.com/zmap/zlint/lints",
     "golang.org/x/crypto/ed25519",
     "golang.org/x/crypto/ocsp",
     "golang.org/x/crypto/pkcs12",
